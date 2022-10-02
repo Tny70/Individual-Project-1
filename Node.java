@@ -1,3 +1,4 @@
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
@@ -69,8 +70,46 @@ public class Node {
         return Objects.hash(parent, state, actions, pathCost);
     }
 
-    public static void solutionPath(Node child) {
+    public void solutionPath() {
+        ArrayList<String>cStates = new ArrayList<>();
+        String flightOrder;
+        Integer pCost = 0;
+        String ptCost;
+        String adCost;
+        String adstops = null;
+        ArrayList<String>fileOut = new ArrayList<>();
+        Node kid = this;
+        System.out.println(kid);
+        while (kid.parent != null){
+            flightOrder = kid.actions.getAirlineCode()+ " from " + kid.getParent().getState().getAirportIata()+ " to "+ kid.state.getAirportIata()+ " is "+ kid.actions.getStops() +" stops ";
+            cStates.add(flightOrder);
+            kid = kid.parent;
+            pCost +=1;
+        }
+        ptCost = "Total flights: "+ pCost;
+        adCost = "Total additional stops is 0";
 
+
+        Collections.reverse(cStates);
+        for (int i = 0; i < cStates.size(); i++){
+            String sentence = i+1 + ". "+ cStates.get(i);
+            fileOut.add(sentence);
+            System.out.println(sentence);
+        }
+        fileOut.add(ptCost);
+        fileOut.add(adCost);
+        System.out.println(ptCost);
+
+        PrintWriter pw=null;
+        try{
+            pw = new PrintWriter("output.txt");
+            for (String line : fileOut) {
+                pw.println(line);
+            }
+            pw.close();
+        }catch(Exception e){
+            System.out.println(e.toString());
+        }
     }
 }
 
