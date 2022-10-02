@@ -72,7 +72,7 @@ public class Main {
                     if (!explored.contains(child) && !frontier.contains(child)) {
                         if (goalTest(child)) {
                             System.out.println(child);
-                            //Node.solutionPath(child);
+                            child.solutionPath();
 
 
                             return child;
