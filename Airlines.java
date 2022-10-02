@@ -1,78 +1,119 @@
-import java.io.* ;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.*;
+import java.util.*;
 
-public class Airlines {
-    private String airlineID;
-    private String airlineName;
-    private String airlineAlias;
-    private String iataCode;
-    private String icoaCode;
-    private String airlineCountry;
-    private String airlineActive;
+public class Main {
+    String startingCity;
+    String startingCountry;
+    String endCity;
+    String endCountry;
 
-    public String getAirlineID() {
-        return airlineID;
-    }
-
-    public String getAirlineName() {
-        return airlineName;
-    }
-
-    public String getAirlineAlias() {
-        return airlineAlias;
-    }
-
-    public String getIataCode() {
-        return iataCode;
-    }
-
-    public String getIcoaCode() {
-        return icoaCode;
-    }
-
-    public String getAirlineCountry() {
-        return airlineCountry;
-    }
-
-    public String getAirlineActive() {
-        return airlineActive;
-    }
-
-    public static void reader(){
+    public void reading() {
         FileReader fileViewer = null;
         BufferedReader buffReader = null;
-        HashMap<String, ArrayList<String>> airlinesInfo = new HashMap<String, ArrayList<String>>();
-        try{
-            fileViewer = new FileReader("airlines.csv");
+        try {
+            fileViewer = new FileReader("input.txt");
             buffReader = new BufferedReader(fileViewer);
             String newLine;
-            while ((newLine = buffReader.readLine()) != null) {
-                String[] airline = newLine.split(",");
-                String airlineID = airline[0];
-                String airlineName = airline[1];
-                String airlineIATA = airline[3];
-                String airlineICOA = airline[4];
-                String airlineCountry = airline[6];
-                String airlineActive = airline[7];
+            String start = buffReader.readLine();
+            String[] lines = start.split(",");
+            this.startingCity = lines[0];
+            this.startingCountry = lines[1];
 
-                airlinesInfo.putIfAbsent(airlineID, new ArrayList<>());
-                airlinesInfo.get(airlineID).add(airlineCountry);
-                airlinesInfo.get(airlineID).add(airlineIATA);
-                airlinesInfo.get(airlineID).add(airlineICOA);
-                airlinesInfo.get(airlineID).add(airlineActive);
-
-
-
-            }
-            System.out.println(airlinesInfo);
-            buffReader.close();
-        } catch (FileNotFoundException e){
-            e.printStackTrace();
+            String end = buffReader.readLine();
+            String[] lines2 = end.split(",");
+            this.endCity = lines2[0];
+            this.endCountry = lines2[1];
+        } catch (FileNotFoundException ex) {
+            throw new RuntimeException(ex);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
 
+    }
+
+        public ArrayList<Node> nodeCreator(){
+            ArrayList<Airports> startAirport = Airports.getAirportsMap().get(startingCity+startingCountry);
+            ArrayList<Node> airportNodes = new ArrayList<>();
+            for (Airports airport:startAirport){
+                Node node = new Node(null, airport, null, 0);
+                airportNodes.add(node);
+            }
+            System.out.println(airportNodes);
+            return airportNodes;
+    }
+
+    public boolean goalTest(Node child){
+        if (child.getState() ==null){
+            return false;
+        }
+        if (child.getState().getAirportCity().equals(endCity)  && child.getState().getAirportCountry().equals(endCountry)){
+            return true;
+        }
+        else{
+            return false;
         }
     }
 
+    public Node bfs() {
+        Queue<Node> frontier = new LinkedList<Node>();
+        ArrayList<Node> airportNode = nodeCreator();
+
+        frontier.addAll(airportNode);
+
+        HashSet<Node> explored = new HashSet<>();
+
+        while (frontier.size() > 0) {
+            Node initialNode = frontier.poll();
+            explored.add(initialNode);
+            if (initialNode.getState() != null) {
+                ArrayList<Routes> flights = Routes.routesMap.get(initialNode.getState().getAirportIata());
+                for (Routes action : flights) {
+                    Node child = new Node(initialNode, Airports.iataAirport.get(action.getDestinationAirportCode()), action, initialNode.getPathCost() + 1);
+                    if (!explored.contains(child) && !frontier.contains(child)) {
+                        if (goalTest(child)) {
+                            System.out.println(child);
+                            //Node.solutionPath(child);
+
+
+                            return child;
+                        }
+                        frontier.add(child);
+                    }
+
+                }
+
+            }else {;}
+
+
+        }
+        return null;
+    }
+
+    //public void debug(){
+        //System.out.println(child);
+    //}
+
+    public void writer(){
+        PrintWriter pw=null;
+        try{
+            pw = new PrintWriter("output.txt");
+            pw.println("");
+            pw.println("done");
+            pw.close();
+        }catch(Exception e){
+            System.out.println(e.toString());
+        }
+    }
+
+    public static void main(String[] args) {
+        Main execute = new Main();
+
+        Airports.reader();
+        Airlines.reader();
+        Routes.reader();
+
+        execute.reading();
+        execute.nodeCreator();
+        execute.bfs();
+    }
 }
